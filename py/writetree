@@ -1,0 +1,27 @@
+#!/usr/bin/python
+
+import zlib
+import sys
+import hashlib
+import os
+
+tree_entry_format = bytearray("100644 %s\x00%s", "utf8")
+tree_entries = bytearray()
+
+for arg in sys.argv[1:]:
+    [name_str, sha1_str] = arg.split("=")
+    name = bytearray(name_str, "utf8")
+    sha1 = bytearray.fromhex(sha1_str)
+    tree_entries += tree_entry_format % (name, sha1)
+
+obj_format = bytearray("tree %d\x00%s", "utf8")
+obj_data = obj_format % (len(tree_entries), tree_entries)
+
+sha1_hasher = hashlib.sha1()
+sha1_hasher.update(obj_data)
+checksum = sha1_hasher.digest().hex()
+
+os.makedirs(".git/objects/" + checksum[0:2], exist_ok = True)
+f = open(".git/objects/" + checksum[0:2] + "/" + checksum[2:], "wb")
+f.write(zlib.compress(obj_data))
+print(checksum)

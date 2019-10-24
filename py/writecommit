@@ -1,0 +1,36 @@
+#!/usr/bin/python
+
+import zlib
+import sys
+import hashlib
+import os
+
+tree = sys.argv[1]
+commit = "tree {}\n".format(tree)
+
+msg = sys.argv[2]
+
+if len(sys.argv) > 3:
+    for arg in sys.argv[3:]:
+        commit += "parent {}\n".format(arg)
+
+commit_header_format = """author Øystein Walle <oystein.walle@infrontfinance.com> 1571650134 +0200
+committer Øystein Walle <oystein.walle@infrontfinance.com> 1571650134 +0200
+
+{}
+"""
+commit += commit_header_format.format(msg)
+
+commit_data = bytearray(commit, "utf8")
+
+obj_format = bytearray("commit %d\x00%s", "utf8")
+obj_data = obj_format % (len(commit_data), commit_data)
+
+sha1_hasher = hashlib.sha1()
+sha1_hasher.update(obj_data)
+checksum = sha1_hasher.digest().hex()
+
+os.makedirs(".git/objects/" + checksum[0:2], exist_ok = True)
+f = open(".git/objects/" + checksum[0:2] + "/" + checksum[2:], "wb")
+f.write(zlib.compress(obj_data))
+print(checksum)

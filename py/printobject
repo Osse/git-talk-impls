@@ -1,0 +1,18 @@
+#!/usr/bin/python
+
+import zlib
+import sys
+import os
+
+#Format: blob 69\x00file_contents
+#Format: tree 1337\x00directory_listingish
+
+obj = sys.stdin.buffer.read()
+inflated = zlib.decompress(obj)
+
+space = inflated.index(32)
+null = inflated.index(0)
+
+obj_type = inflated[0:space].decode("utf8")
+print("Type: " + obj_type)
+sys.stdout.buffer.write(inflated[null+1:])
