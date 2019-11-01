@@ -29,7 +29,7 @@ int main(int argc, char const *argv[])
 
     auto hash_str = write_object(obj_data);
 
-    fmt::print("Written object: {}\n", hash_str);
+    fmt::print("{}\n", hash_str);
 
     return 0;
 }

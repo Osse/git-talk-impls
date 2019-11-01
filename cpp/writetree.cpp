@@ -37,7 +37,7 @@ int main(int argc, char const *argv[])
     std::copy(tree_data.begin(), tree_data.end(), obj_bi);
 
     auto hash_str = write_object(obj_data);
-    fmt::print("Written object: {}\n", hash_str);
+    fmt::print("{}\n", hash_str);
 
     return 0;
 }

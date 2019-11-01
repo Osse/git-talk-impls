@@ -35,7 +35,7 @@ committer Øystein Walle <oystein.walle@infrontfinance.com> 1571650134 +0200
     std::copy(commit_data.begin(), commit_data.end(), obj_bi);
 
     auto hash_str = write_object(obj_data);
-    fmt::print("Written object: {}\n", hash_str);
+    fmt::print("{}\n", hash_str);
 
     return 0;
 }
