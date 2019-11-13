@@ -14,8 +14,8 @@ if len(sys.argv) > 3:
     for arg in sys.argv[3:]:
         commit += "parent {}\n".format(arg)
 
-commit_header_format = """author Øystein Walle <oystein.walle@infrontfinance.com> 1571650134 +0200
-committer Øystein Walle <oystein.walle@infrontfinance.com> 1571650134 +0200
+commit_header_format = """author Øystein Walle <oystwa@gmail.com> 1571650134 +0200
+committer Øystein Walle <oystwa@gmail.com> 1571650134 +0200
 
 {}
 """

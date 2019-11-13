@@ -1,0 +1,61 @@
+#!/usr/bin/zsh
+
+path=($PWD/$1 $path)
+
+set -ex
+
+rm -rf test_repo && mkdir -p test_repo && cd test_repo
+git init
+
+main_c=$(writeblob <<EOF
+lol
+EOF
+)
+
+git rev-parse --verify "$main_c^{blob}"
+
+README=$(writeblob <<EOF
+Hello World
+-----------
+
+This is my hello world project.
+EOF
+)
+
+git rev-parse --verify "$README^{blob}"
+
+tree=$(writetree README=$README main.c=$main_c)
+
+git rev-parse --verify "$tree^{tree}"
+
+commit=$(writecommit $tree "Initial commit")
+
+git rev-parse --verify "$commit^{commit}"
+
+main_c=$(writeblob <<EOF
+#include <stdio.h>
+
+int main(int argc, char const *argv[]) {
+    printf("%s\n", "Hola, senor");
+    return 0;
+}
+EOF
+)
+
+git rev-parse --verify $main_c
+git rev-parse --verify "$main_c^{blob}"
+
+new_tree=$(writetree README=$README main.c=$main_c)
+
+git rev-parse --verify "$new_tree^{tree}"
+
+new_commit=$(writecommit $new_tree "Make spanish" $commit)
+
+git rev-parse --verify "$new_commit^{commit}"
+
+echo $new_commit > .git/refs/heads/master
+
+checkouttree $new_commit
+
+git log -p
+

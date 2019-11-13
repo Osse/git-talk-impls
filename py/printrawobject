@@ -1,0 +1,9 @@
+#!/usr/bin/python
+
+import zlib
+import sys
+import os
+
+obj = sys.stdin.buffer.read()
+inflated = zlib.decompress(obj)
+sys.stdout.buffer.write(inflated)
