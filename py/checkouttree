@@ -34,6 +34,7 @@ def write_tree(prefix, tree_data):
         if space == -1:
             break
 
+        entry_type = tree_data[0:space].decode("utf8")
         null = tree_data.index(0)
         filename = tree_data[space+1:null].decode("utf8")
         file_hash = tree_data[null + 1:null + 21].hex()
@@ -45,8 +46,12 @@ def write_tree(prefix, tree_data):
                 fullname = prefix + "/" + filename
             else:
                 fullname = filename
-            with open(fullname, "w") as fo:
-                fo.buffer.write(contents[contents.find(0)+1:])
+
+            if entry_type == "100644":
+                with open(fullname, "w") as fo:
+                    fo.buffer.write(contents[contents.find(0)+1:])
+            elif entry_type == "040000":
+                write_tree(fullname, contents)
 
         tree_data = tree_data[null + 21:]
 
