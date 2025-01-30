@@ -1,0 +1,40 @@
+#!/usr/bin/python3
+
+import zlib
+import sys
+import hashlib
+import os
+
+
+
+index = bytearray()
+
+index += bytearray("DIRC", "utf8")
+
+version = 4
+index += version.to_bytes(length=4)
+
+top = "./"
+all_files = []
+for (root, dirs, files) in os.walk(top):
+    if root.startswith("./.git"):
+        continue
+    for f in files:
+        full = os.path.join(root, f).removeprefix(top)
+        all_files.append(full)
+
+all_files.sort()
+index += len(all_files).to_bytes(length=4)
+
+for f in all_files:
+    s = os.lstat(f)
+    index += int(s.st_ctime).to_bytes(4)
+    index += int(int(s.st_ctime_ns) - int(s.st_ctime)*1e9).to_bytes(4)
+    index += int(s.st_mtime).to_bytes(4)
+    index += int(int(s.st_mtime_ns) - int(s.st_mtime)*1e9).to_bytes(4)
+    index += s.st_dev.to_bytes(4)
+    index += s.st_ino.to_bytes(4)
+    index += s.st_mode.to_bytes(4)
+
+with open(".git/index", "wb") as f:
+    f.write(index)
