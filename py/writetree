@@ -5,14 +5,18 @@ import sys
 import hashlib
 import os
 
-tree_entry_format = bytearray("100644 %s\x00%s", "utf8")
+tree_entry_tree_format = bytearray("040000 %s\x00%s", "utf8")
+tree_entry_blob_format = bytearray("100644 %s\x00%s", "utf8")
 tree_entries = bytearray()
 
 for arg in sys.argv[1:]:
     [name_str, sha1_str] = arg.split("=")
     name = bytearray(name_str, "utf8")
     sha1 = bytearray.fromhex(sha1_str)
-    tree_entries += tree_entry_format % (name, sha1)
+    if name_str.endswith("/"):
+        tree_entries += tree_entry_tree_format % (name[0:-1], sha1)
+    else:
+        tree_entries += tree_entry_blob_format % (name, sha1)
 
 obj_format = bytearray("tree %d\x00%s", "utf8")
 obj_data = obj_format % (len(tree_entries), tree_entries)
