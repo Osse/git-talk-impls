@@ -53,9 +53,29 @@ new_commit=$(writecommit $new_tree "Make spanish" $commit)
 
 git rev-parse --verify "$new_commit^{commit}"
 
+README_md=$(writeblob <<EOF
+# My project
+
+Hello world.
+EOF
+)
+
+CONTRIBUTING_md=$(writeblob <<EOF
+# How to install
+
+Yess.
+EOF
+)
+doc_tree=$(writetree README.md=$README_md CONTRIBUTING.md=$CONTRIBUTING_md)
+new_tree=$(writetree README=$README main.c=$main_c doc/=$doc_tree)
+
+new_commit=$(writecommit $new_tree "doc subdir" $new_commit)
+
 echo $new_commit > .git/refs/heads/master
 
 checkouttree $new_commit
 
 git log -p
+
+tree
 
