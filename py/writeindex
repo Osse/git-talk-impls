@@ -5,13 +5,9 @@ import sys
 import hashlib
 import os
 
+index = bytearray("DIRC", "utf8")
 
-
-index = bytearray()
-
-index += bytearray("DIRC", "utf8")
-
-version = 4
+version = 2
 index += version.to_bytes(length=4)
 
 top = "./"
@@ -24,17 +20,72 @@ for (root, dirs, files) in os.walk(top):
         all_files.append(full)
 
 all_files.sort()
+
 index += len(all_files).to_bytes(length=4)
 
 for f in all_files:
+    entry = bytearray()
+
     s = os.lstat(f)
-    index += int(s.st_ctime).to_bytes(4)
-    index += int(int(s.st_ctime_ns) - int(s.st_ctime)*1e9).to_bytes(4)
-    index += int(s.st_mtime).to_bytes(4)
-    index += int(int(s.st_mtime_ns) - int(s.st_mtime)*1e9).to_bytes(4)
-    index += s.st_dev.to_bytes(4)
-    index += s.st_ino.to_bytes(4)
-    index += s.st_mode.to_bytes(4)
+
+    ctime = int(s.st_ctime)
+    mtime = int(s.st_mtime)
+
+    entry += ctime.to_bytes(4)
+    entry += int(int(s.st_ctime_ns) - ctime*int(1e9)).to_bytes(4)
+
+    entry += mtime.to_bytes(4)
+    entry += int(int(s.st_mtime_ns) - mtime*int(1e9)).to_bytes(4)
+
+    entry += s.st_dev.to_bytes(4)
+    entry += s.st_ino.to_bytes(4)
+
+    mode = s.st_mode
+    # entry += ((mode &0xffff)).to_bytes(2) # TODO break doc??
+    entry += ((mode >> 16)).to_bytes(2)
+
+    obj = 0b1000
+    # 3 bit 0
+    mode = 0o644
+    entry += (obj << 12 | mode).to_bytes(2)
+
+    entry += s.st_uid.to_bytes(4)
+    entry += s.st_gid.to_bytes(4)
+    entry += s.st_size.to_bytes(4)
+
+    with open(f, "rb") as ff:
+        data = ff.read()
+        obj_format = bytearray("blob %d\x00%s", "utf8")
+        obj_data = obj_format % (len(data), data)
+
+        sha1_hasher = hashlib.sha1()
+        sha1_hasher.update(obj_data)
+        checksum = sha1_hasher.digest()
+
+    entry += checksum
+
+    assume_valid = 0
+    extended = 0
+    stage = 0
+    name_len = len(f) & 0b111111111111
+
+    flags = (assume_valid << 15) | (extended << 14) | (stage << 13) | name_len
+
+    entry += flags.to_bytes(2)
+
+    entry += bytearray(f, "utf8")
+
+    pad_len =  8 - (len(entry) % 8)
+    entry += int(0).to_bytes(pad_len)
+
+    index += entry
+
+
+sha1_hasher = hashlib.sha1()
+sha1_hasher.update(index)
+checksum = sha1_hasher.digest()
+
+index += checksum
 
 with open(".git/index", "wb") as f:
     f.write(index)

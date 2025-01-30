@@ -74,8 +74,12 @@ new_commit=$(writecommit $new_tree "doc subdir" $new_commit)
 echo $new_commit > .git/refs/heads/master
 
 checkouttree $new_commit
+writeindex
+cat .git/index
 
 git log -p
 
 tree
+
+git status
 
