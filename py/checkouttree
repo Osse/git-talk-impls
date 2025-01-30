@@ -10,7 +10,6 @@ with open(".git/objects/" + hash_str[0:2] + "/" + hash_str[2:], "rb") as f:
     inflated = zlib.decompress(f.read())
 
 space = inflated.index(32)
-null = inflated.index(0)
 
 obj_type = inflated[0:space].decode("utf8")
 
@@ -18,6 +17,7 @@ if obj_type == "tree":
     print("hash is tree")
 elif obj_type == "commit":
     print("hash is commit")
+    null = inflated.index(0)
     tree_hash = inflated[null+1:].decode("utf8").split("\n")[0][5:]
     with open(".git/objects/" + tree_hash[0:2] + "/" + tree_hash[2:], "rb") as f:
         inflated = zlib.decompress(f.read())
@@ -25,21 +25,22 @@ elif obj_type != "tree":
     print("No such kek or rofl")
     exit(1)
 
-tree_data = inflated[null+1:]
-
-#while (!tree_data.empty())
-while tree_data:
-    space = tree_data.find(32)
-    if space == -1:
-        break
-
+def write_tree(tree_data):
     null = tree_data.index(0)
-    filename = tree_data[space+1:null].decode("utf8")
-    file_hash = tree_data[null + 1:null + 21].hex()
+    tree_data = tree_data[null+1:]
 
-    with open(".git/objects/" + file_hash[0:2] + "/" + file_hash[2:], "rb") as fi:
-        contents = zlib.decompress(fi.read())
-        with open(filename, "w") as fo:
-            fo.buffer.write(contents[contents.find(0)+1:])
+    while tree_data:
+        space = tree_data.find(32)
+        if space == -1:
+            break
 
-    tree_data = tree_data[null + 21:]
+        null = tree_data.index(0)
+        filename = tree_data[space+1:null].decode("utf8")
+        file_hash = tree_data[null + 1:null + 21].hex()
+
+        with open(".git/objects/" + file_hash[0:2] + "/" + file_hash[2:], "rb") as fi:
+            contents = zlib.decompress(fi.read())
+            with open(filename, "w") as fo:
+                fo.buffer.write(contents[contents.find(0)+1:])
+
+        tree_data = tree_data[null + 21:]
