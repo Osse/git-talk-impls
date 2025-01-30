@@ -25,7 +25,7 @@ elif obj_type != "tree":
     print("No such kek or rofl")
     exit(1)
 
-def write_tree(tree_data):
+def write_tree(prefix, tree_data):
     null = tree_data.index(0)
     tree_data = tree_data[null+1:]
 
@@ -40,7 +40,14 @@ def write_tree(tree_data):
 
         with open(".git/objects/" + file_hash[0:2] + "/" + file_hash[2:], "rb") as fi:
             contents = zlib.decompress(fi.read())
-            with open(filename, "w") as fo:
+            if prefix:
+                os.makedirs(prefix, exist_ok=True)
+                fullname = prefix + "/" + filename
+            else:
+                fullname = filename
+            with open(fullname, "w") as fo:
                 fo.buffer.write(contents[contents.find(0)+1:])
 
         tree_data = tree_data[null + 21:]
+
+write_tree("", inflated)
