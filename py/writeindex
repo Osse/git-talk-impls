@@ -12,21 +12,20 @@ index += version.to_bytes(length=4)
 
 top = "./"
 all_files = []
-for (root, dirs, files) in os.walk(top):
-    if root.startswith("./.git"):
-        continue
-    for f in files:
-        full = os.path.join(root, f).removeprefix(top)
-        all_files.append(full)
+for (root, dirs, files) in os.walk(top, topdown=True):
+    if ".git" in dirs:
+        dirs.remove(".git")
+    dir = root.removeprefix(top)
+    all_files.extend([os.path.join(dir, f) for f in files])
 
 all_files.sort()
 
 index += len(all_files).to_bytes(length=4)
 
-for f in all_files:
+def write_entry(file) -> bytearray:
     entry = bytearray()
 
-    s = os.lstat(f)
+    s = os.lstat(file)
 
     ctime = int(s.st_ctime)
     mtime = int(s.st_mtime)
@@ -67,19 +66,21 @@ for f in all_files:
     assume_valid = 0
     extended = 0
     stage = 0
-    name_len = len(f) & 0b111111111111
+    name_len = len(file) & 0b111111111111
 
     flags = (assume_valid << 15) | (extended << 14) | (stage << 13) | name_len
 
     entry += flags.to_bytes(2)
 
-    entry += bytearray(f, "utf8")
+    entry += bytearray(file, "utf8")
 
     pad_len =  8 - (len(entry) % 8)
     entry += int(0).to_bytes(pad_len)
 
-    index += entry
+    return entry
 
+for f in all_files:
+    index += write_entry(f)
 
 sha1_hasher = hashlib.sha1()
 sha1_hasher.update(index)
