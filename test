@@ -75,7 +75,6 @@ echo $new_commit > .git/refs/heads/master
 
 checkouttree $new_commit
 writeindex
-cat .git/index
 
 git log -p
 
