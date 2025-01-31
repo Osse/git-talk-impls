@@ -29,7 +29,7 @@ def write_entry(file) -> bytearray:
 
     with open(file, "rb") as f:
         data = f.read()
-        obj_format = bytearray("blob %d\x00%s", "utf8")
+        obj_format = "blob %d\x00%s".encode()
         obj_data = obj_format % (len(data), data)
 
         sha1_hasher = hashlib.sha1()
@@ -41,9 +41,12 @@ def write_entry(file) -> bytearray:
     obj_path = os.path.join(obj_dir, hex[2:])
 
     if not os.path.exists(obj_path):
-        os.makedirs(obj_dir, exist_ok = True)
-        with open(obj_path, "wb") as obj:
-            obj.write(zlib.compress(obj_data))
+        if update:
+            os.makedirs(obj_dir, exist_ok = True)
+            with open(obj_path, "wb") as obj:
+                obj.write(zlib.compress(obj_data))
+        else:
+            return None
 
     s = os.lstat(file)
 
@@ -51,10 +54,10 @@ def write_entry(file) -> bytearray:
     mtime = int(s.st_mtime)
 
     entry += ctime.to_bytes(4)
-    entry += int(int(s.st_ctime_ns) - ctime*int(1e9)).to_bytes(4)
+    entry += (int(s.st_ctime_ns) - ctime*int(1e9)).to_bytes(4)
 
     entry += mtime.to_bytes(4)
-    entry += int(int(s.st_mtime_ns) - mtime*int(1e9)).to_bytes(4)
+    entry += (int(s.st_mtime_ns) - mtime*int(1e9)).to_bytes(4)
 
     entry += s.st_dev.to_bytes(4)
     entry += s.st_ino.to_bytes(4)
@@ -92,7 +95,9 @@ def write_entry(file) -> bytearray:
     return entry
 
 for f in all_files:
-    index += write_entry(f)
+    e = write_entry(f)
+    if e is not None:
+        index += e
 
 sha1_hasher = hashlib.sha1()
 sha1_hasher.update(index)

@@ -8,7 +8,12 @@ rm -rf test_repo && mkdir -p test_repo && cd test_repo
 git init
 
 main_c=$(writeblob <<EOF
-lol
+#include <stdio.h>
+
+int main(int argc, char const *argv[]) {
+    printf("%s\n", "Hello, World!");
+    return 0;
+}
 EOF
 )
 
