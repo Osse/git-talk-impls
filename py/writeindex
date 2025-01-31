@@ -22,8 +22,28 @@ all_files.sort()
 
 index += len(all_files).to_bytes(length=4)
 
+update = len(sys.argv) > 1 and sys.argv[1] == "update"
+
 def write_entry(file) -> bytearray:
     entry = bytearray()
+
+    with open(file, "rb") as f:
+        data = f.read()
+        obj_format = bytearray("blob %d\x00%s", "utf8")
+        obj_data = obj_format % (len(data), data)
+
+        sha1_hasher = hashlib.sha1()
+        sha1_hasher.update(obj_data)
+        checksum = sha1_hasher.digest()
+
+    hex = checksum.hex()
+    obj_dir = os.path.join(".git", "objects", hex[0:2])
+    obj_path = os.path.join(obj_dir, hex[2:])
+
+    if not os.path.exists(obj_path):
+        os.makedirs(obj_dir, exist_ok = True)
+        with open(obj_path, "wb") as obj:
+            obj.write(zlib.compress(obj_data))
 
     s = os.lstat(file)
 
@@ -52,14 +72,6 @@ def write_entry(file) -> bytearray:
     entry += s.st_gid.to_bytes(4)
     entry += s.st_size.to_bytes(4)
 
-    with open(f, "rb") as ff:
-        data = ff.read()
-        obj_format = bytearray("blob %d\x00%s", "utf8")
-        obj_data = obj_format % (len(data), data)
-
-        sha1_hasher = hashlib.sha1()
-        sha1_hasher.update(obj_data)
-        checksum = sha1_hasher.digest()
 
     entry += checksum
 
