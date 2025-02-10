@@ -37,6 +37,8 @@ commit=$(writecommit $tree "Initial commit")
 
 git rev-parse --verify "$commit^{commit}"
 
+# ########################################################3
+
 main_c=$(writeblob <<EOF
 #include <stdio.h>
 
@@ -50,13 +52,15 @@ EOF
 git rev-parse --verify $main_c
 git rev-parse --verify "$main_c^{blob}"
 
-new_tree=$(writetree README=$README main.c=$main_c)
+tree=$(writetree README=$README main.c=$main_c)
 
-git rev-parse --verify "$new_tree^{tree}"
+git rev-parse --verify "$tree^{tree}"
 
-new_commit=$(writecommit $new_tree "Make spanish" $commit)
+commit=$(writecommit $tree "Make spanish" $commit)
 
-git rev-parse --verify "$new_commit^{commit}"
+git rev-parse --verify "$commit^{commit}"
+
+# ########################################################3
 
 README_md=$(writeblob <<EOF
 # My project
@@ -72,18 +76,20 @@ Yess.
 EOF
 )
 doc_tree=$(writetree README.md=$README_md CONTRIBUTING.md=$CONTRIBUTING_md)
-new_tree=$(writetree README=$README main.c=$main_c doc/=$doc_tree)
+tree=$(writetree README=$README main.c=$main_c doc/=$doc_tree)
 
-new_commit=$(writecommit $new_tree "doc subdir" $new_commit)
+commit=$(writecommit $tree "doc subdir" $commit)
 
-echo $new_commit > .git/refs/heads/master
+# ########################################################3
 
-checkouttree $new_commit
+echo $commit > .git/refs/heads/master
+
+checkouttree $commit
 writeindex
 
-git log -p
+git --no-pager log -p
 
 tree
 
-git status
+git --no-pager status
 
