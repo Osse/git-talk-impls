@@ -9,7 +9,10 @@ tree_entry_tree_format = bytearray("040000 %s\x00%s", "utf8")
 tree_entry_blob_format = bytearray("100644 %s\x00%s", "utf8")
 tree_entries = bytearray()
 
-for arg in sys.argv[1:]:
+entries = sys.argv[1:]
+entries.sort()
+
+for arg in entries:
     [name_str, sha1_str] = arg.split("=")
     name = bytearray(name_str, "utf8")
     sha1 = bytearray.fromhex(sha1_str)
